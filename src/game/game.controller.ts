@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Put, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, Query } from '@nestjs/common';
 import { GameService } from './game.service';
 import { CreateGameDto } from './game.dto';
 
@@ -12,8 +12,24 @@ export class GameController {
   }
 
   @Get()
-  async findAll() {
-    return this.gameService.findAll();
+  async findAll(@Query() query: any) {
+    if (query.filters && query.filters.name && query.filters.name.$in) {
+      query.filters.name.$in = query.filters.name.$in.split(',').map(value => value.trim());
+    }
+    if (query.filters) {
+      for (const field in query.filters) {  
+        if (query.filters[field] && query.filters[field].$in) {
+          query.filters[field].$in = query.filters[field].$in.split(',').map(value => value.trim());
+        }
+        if (query.filters[field] && query.filters[field].$notIn) {
+          query.filters[field].$notIn = query.filters[field].$notIn.split(',').map(value => value.trim());
+        }
+        if (query.filters[field] && query.filters[field].$between) {
+          query.filters[field].$between = query.filters[field].$between.split(',').map(value => value.trim());
+        }
+      }
+    }
+    return this.gameService.findAll(query);
   }
 
   @Get(':id')
